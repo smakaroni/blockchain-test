@@ -34,7 +34,7 @@ var balanceListCmd = &cobra.Command{
 		}
 		defer state.Close()
 
-		fmt.Println("Accounts balances:")
+		fmt.Printf("Accounts balances: %x:\n", state.LatestSnapshot())
 		fmt.Println("-------------------")
 		fmt.Println("")
 		for account, balance := range state.Balances {
