@@ -1,0 +1,7 @@
+{
+  "genesis_time": "2022-05-27T00:00.000000000Z",
+  "chain_id": "the-maaad-blockchain-household",
+  "balances": {
+    "jokke": 1000000
+  }
+}
