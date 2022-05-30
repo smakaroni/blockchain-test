@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+const flagDataDir = "datadir"
+
 func main() {
 	var mbhCmd = &cobra.Command{
 		Use:   "mbh",
@@ -15,14 +17,19 @@ func main() {
 	}
 
 	mbhCmd.AddCommand(versionCmd)
+	mbhCmd.AddCommand(runCmd())
 	mbhCmd.AddCommand(balancesCmd())
-	mbhCmd.AddCommand(txCmd())
 
 	err := mbhCmd.Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func addDefaultReqFlags(cmd *cobra.Command) {
+	cmd.Flags().String(flagDataDir, "", "Absolute path to the node data dir where the DB is stored")
+	cmd.MarkFlagRequired(flagDataDir)
 }
 
 func incorrectUsageErr() error {
