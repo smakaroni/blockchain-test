@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/smakaroni/maaad-blockchain-household/database"
+	"github.com/smakaroni/maaad-blockchain-household/node"
 	"github.com/spf13/cobra"
-	"os"
 	"time"
 )
 
@@ -13,45 +14,45 @@ var migrateCmd = func() *cobra.Command {
 		Use:   "migrate",
 		Short: "Migrates the blockchain db",
 		Run: func(cmd *cobra.Command, args []string) {
-			state, err := database.NewStateFromDisk(getDataDirFromCmd(cmd))
+			miner, _ := cmd.Flags().GetString(flagMiner)
+			ip, _ := cmd.Flags().GetString(flagIP)
+			port, _ := cmd.Flags().GetUint64(flagPort)
+
+			peer := node.NewPeerNode("127.0.0.1", 8080, true, database.NewAccount("jokke"), false)
+
+			n := node.New(getDataDirFromCmd(cmd), ip, port, database.NewAccount(miner), peer)
+
+			n.AddPendingTX(database.NewTx("jokke", "emma", 500000, ""), peer)
+			n.AddPendingTX(database.NewTx("jokke", "majken", 1000, ""), peer)
+			n.AddPendingTX(database.NewTx("emma", "majken", 1000, ""), peer)
+
+			ctx, closeNode := context.WithTimeout(context.Background(), time.Minute*15)
+
+			go func() {
+				ticker := time.NewTicker(time.Second * 10)
+
+				for {
+					select {
+					case <-ticker.C:
+						if !n.LatestBlockHash().IsEmpty() {
+							closeNode()
+							return
+						}
+					}
+				}
+			}()
+
+			err := n.Run(ctx)
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-			defer state.Close()
-
-			block0 := database.NewBlock(
-				database.Hash{},
-				state.NextBlockNumber(),
-				uint64(time.Now().Unix()),
-				[]database.Tx{
-					database.NewTx("jokke", "emma", 500000, ""),
-				})
-
-			block0Hash, err := state.AddBlock(block0)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
-
-			block1 := database.NewBlock(
-				block0Hash,
-				state.NextBlockNumber(),
-				uint64(time.Now().Unix()),
-				[]database.Tx{
-					database.NewTx("emma", "majken", 1000, ""),
-					database.NewTx("jokke", "majken", 1000, ""),
-				})
-
-			_, err = state.AddBlock(block1)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
+				fmt.Println(err)
 			}
 		},
 	}
 
 	addDefaultReqFlags(migrateCmd)
+	migrateCmd.Flags().String(flagMiner, node.DefaultMiner, "miner account of this node to receive block rewards")
+	migrateCmd.Flags().String(flagIP, node.DefaultIP, "exposed IP for communication with peers")
+	migrateCmd.Flags().Uint64(flagPort, node.DefaultPort, "exposed HTTP port for communication with peers")
 
 	return migrateCmd
 }

@@ -35,7 +35,7 @@ func readReq(r *http.Request, reqBody interface{}) error {
 
 	err = json.Unmarshal(reqBodyJson, reqBody)
 	if err != nil {
-		return fmt.Errorf("unable to unmarshal request body", err.Error())
+		return fmt.Errorf("unable to unmarshal request body %s", err.Error())
 	}
 
 	return nil

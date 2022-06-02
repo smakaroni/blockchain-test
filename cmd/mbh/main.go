@@ -11,6 +11,7 @@ const (
 	flagDataDir = "datadir"
 	flagIP      = "ip"
 	flagPort    = "port"
+	flagMiner   = "miner"
 )
 
 func main() {
