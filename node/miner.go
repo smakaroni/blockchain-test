@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/smakaroni/maaad-blockchain-household/database"
 	"github.com/smakaroni/maaad-blockchain-household/fs"
 	"math/rand"
@@ -13,11 +14,11 @@ type PendingBlock struct {
 	parent database.Hash
 	number uint64
 	time   uint64
-	miner  database.Account
-	txs    []database.Tx
+	miner  common.Address
+	txs    []database.SignedTx
 }
 
-func NewPendingBlock(parent database.Hash, number uint64, miner database.Account, txs []database.Tx) PendingBlock {
+func NewPendingBlock(parent database.Hash, number uint64, miner common.Address, txs []database.SignedTx) PendingBlock {
 	return PendingBlock{parent: parent, number: number, time: uint64(time.Now().Unix()), miner: miner, txs: txs}
 }
 

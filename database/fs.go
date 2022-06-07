@@ -1,24 +1,21 @@
 package database
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-func initDataDirIfNotExist(dataDir string) error {
-	fmt.Println("initing", dataDir)
+func initDataDirIfNotExist(dataDir string, genesis []byte) error {
 	if fileExist(getGenesisJsonPath(dataDir)) {
 		return nil
 	}
 
 	if err := os.MkdirAll(getDbDirPath(dataDir), os.ModePerm); err != nil {
-		fmt.Println("making dir", err.Error())
 		return err
 	}
 
-	if err := writeGenesisToDisk(getGenesisJsonPath(dataDir)); err != nil {
+	if err := writeGenesisToDisk(getGenesisJsonPath(dataDir), genesis); err != nil {
 		return err
 	}
 

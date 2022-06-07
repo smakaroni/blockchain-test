@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"github.com/ethereum/go-ethereum/common"
 	"io/ioutil"
 )
 
@@ -10,12 +11,12 @@ var genesisJson = `
   "genesis_time": "2022-05-27T00:00.000000000Z",
   "chain_id": "the-maaad-blockchain-household",
   "balances": {
-    "jokke": 1000000
+    "0xEdD144f5D916340F285d5F34309B4E8b65A65570": 1000000
   }
 }`
 
 type genesis struct {
-	Balances map[Account]uint `json:"balances"`
+	Balances map[common.Address]uint `json:"balances"`
 }
 
 func loadGenesis(path string) (genesis, error) {
@@ -33,6 +34,6 @@ func loadGenesis(path string) (genesis, error) {
 	return loadedGen, nil
 }
 
-func writeGenesisToDisk(path string) error {
-	return ioutil.WriteFile(path, []byte(genesisJson), 0644)
+func writeGenesisToDisk(path string, genesis []byte) error {
+	return ioutil.WriteFile(path, genesis, 0644)
 }

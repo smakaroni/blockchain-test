@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	Major  = "0"
-	Minor  = "9"
+	Major  = "1"
+	Minor  = "0"
 	Fix    = "0"
-	Verbal = "PoW Reward"
+	Verbal = "Decentralized authentication"
 )
 
 var versionCmd = &cobra.Command{

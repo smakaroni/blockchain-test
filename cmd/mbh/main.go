@@ -8,10 +8,14 @@ import (
 )
 
 const (
-	flagDataDir = "datadir"
-	flagIP      = "ip"
-	flagPort    = "port"
-	flagMiner   = "miner"
+	flagDataDir       = "datadir"
+	flagIP            = "ip"
+	flagPort          = "port"
+	flagMiner         = "miner"
+	flagKeystoreFile  = "keystore"
+	flagBootstrapAcc  = "bootstrap-account"
+	flagBootstrapIp   = "bootstrap-ip"
+	flagBootstrapPort = "bootstrap-port"
 )
 
 func main() {
@@ -22,8 +26,8 @@ func main() {
 		},
 	}
 
-	mbhCmd.AddCommand(migrateCmd())
 	mbhCmd.AddCommand(versionCmd)
+	mbhCmd.AddCommand(walletCmd())
 	mbhCmd.AddCommand(runCmd())
 	mbhCmd.AddCommand(balancesCmd())
 
@@ -37,6 +41,11 @@ func main() {
 func addDefaultReqFlags(cmd *cobra.Command) {
 	cmd.Flags().String(flagDataDir, "", "Absolute path to the node data dir where the DB is stored")
 	cmd.MarkFlagRequired(flagDataDir)
+}
+
+func addKeystoreFlag(cmd *cobra.Command) {
+	cmd.Flags().String(flagKeystoreFile, "", "Absolute path to the encrypted keystore file")
+	cmd.MarkFlagRequired(flagKeystoreFile)
 }
 
 func getDataDirFromCmd(cmd *cobra.Command) string {
