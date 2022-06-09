@@ -29,6 +29,7 @@ const (
 	endpointAddPeerQueryKeyMiner = "miner"
 
 	miningIntervalSeconds = 10
+	DefaultDifficulty     = 3
 )
 
 type PeerNode struct {
@@ -54,10 +55,11 @@ type Node struct {
 	archivedTXs     map[string]database.SignedTx
 	newSyncedBlocks chan database.Block
 	newPendingTXs   chan database.SignedTx
+	difficulty      uint
 	isMining        bool
 }
 
-func New(dataDir, ip string, port uint64, acc common.Address, bootstrap PeerNode) *Node {
+func New(dataDir, ip string, port uint64, acc common.Address, bootstrap PeerNode, difficulty uint) *Node {
 	knownPeers := make(map[string]PeerNode)
 	knownPeers[bootstrap.TcpAddress()] = bootstrap
 
@@ -70,6 +72,7 @@ func New(dataDir, ip string, port uint64, acc common.Address, bootstrap PeerNode
 		newSyncedBlocks: make(chan database.Block),
 		newPendingTXs:   make(chan database.SignedTx, 10000),
 		isMining:        false,
+		difficulty:      difficulty,
 	}
 }
 
@@ -80,7 +83,7 @@ func NewPeerNode(ip string, port uint64, isBootstrap bool, acc common.Address, c
 func (n *Node) Run(ctx context.Context) error {
 	fmt.Println(fmt.Sprintf("Listening on %s:%d", n.info.IP, n.info.Port))
 
-	state, err := database.NewStateFromDisk(n.dataDir)
+	state, err := database.NewStateFromDisk(n.dataDir, n.difficulty)
 	if err != nil {
 		return err
 	}
@@ -181,7 +184,7 @@ func (n *Node) minePendingTXs(ctx context.Context) error {
 		n.getPendingTXsAsArray(),
 	)
 
-	minedBlock, err := Mine(ctx, blockToMine)
+	minedBlock, err := Mine(ctx, blockToMine, n.difficulty)
 	if err != nil {
 		return err
 	}

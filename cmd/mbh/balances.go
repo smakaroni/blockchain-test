@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/smakaroni/maaad-blockchain-household/database"
+	"github.com/smakaroni/maaad-blockchain-household/node"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -28,7 +29,7 @@ func balanceListCmd() *cobra.Command {
 		Use:   "list",
 		Short: "Lists all balances",
 		Run: func(cmd *cobra.Command, args []string) {
-			state, err := database.NewStateFromDisk(getDataDirFromCmd(cmd))
+			state, err := database.NewStateFromDisk(getDataDirFromCmd(cmd), node.DefaultDifficulty)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)

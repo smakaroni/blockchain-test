@@ -10,6 +10,8 @@ import (
 	"sort"
 )
 
+const TxFee = uint(50)
+
 type State struct {
 	Balances      map[common.Address]uint
 	Account2Nonce map[common.Address]uint
@@ -19,9 +21,11 @@ type State struct {
 	latestBlock     Block
 	latestBlockHash Hash
 	hasGenesisBlock bool
+
+	difficulty uint
 }
 
-func NewStateFromDisk(dataDir string) (*State, error) {
+func NewStateFromDisk(dataDir string, difficulty uint) (*State, error) {
 	err := initDataDirIfNotExist(dataDir, []byte(genesisJson))
 	if err != nil {
 		return nil, err
@@ -46,7 +50,7 @@ func NewStateFromDisk(dataDir string) (*State, error) {
 
 	scanner := bufio.NewScanner(f)
 
-	state := &State{balances, account2nonce, f, Block{}, Hash{}, false}
+	state := &State{balances, account2nonce, f, Block{}, Hash{}, false, difficulty}
 
 	for scanner.Scan() {
 		if err := scanner.Err(); err != nil {
@@ -185,7 +189,7 @@ func applyBlock(b Block, s *State) error {
 		return err
 	}
 
-	if !IsBlockHashValid(hash) {
+	if !IsBlockHashValid(hash, s.difficulty) {
 		return fmt.Errorf("invalid block hash %x", hash)
 	}
 
@@ -195,6 +199,7 @@ func applyBlock(b Block, s *State) error {
 	}
 
 	s.Balances[b.Header.Miner] += BlockReward
+	s.Balances[b.Header.Miner] += uint(len(b.TXs)) * TxFee
 
 	return nil
 }
@@ -215,13 +220,26 @@ func applyTxs(txs []SignedTx, s *State) error {
 }
 
 func applyTx(tx SignedTx, s *State) error {
+	err := ValidateTx(tx, s)
+	if err != nil {
+		return err
+	}
+
+	s.Balances[tx.From] -= tx.Cost()
+	s.Balances[tx.To] += tx.Value
+	s.Account2Nonce[tx.From] = tx.Nonce
+
+	return nil
+}
+
+func ValidateTx(tx SignedTx, s *State) error {
 	ok, err := tx.IsAuthentic()
 	if err != nil {
 		return err
 	}
 
 	if !ok {
-		return fmt.Errorf("wrong TX Sender %s is forged", tx.From.String())
+		return fmt.Errorf("wrong TX, Sender %s is forged", tx.From.String())
 	}
 
 	expectedNonce := s.GetNextAccountNonce(tx.From)
@@ -229,13 +247,9 @@ func applyTx(tx SignedTx, s *State) error {
 		return fmt.Errorf("wrong tx sender %s next nonce must be %d not %d", tx.From.String(), expectedNonce, tx.Nonce)
 	}
 
-	if tx.Value > s.Balances[tx.From] {
-		return fmt.Errorf("wrong tx sender %s balance is %d MBH Tx cost is %d MBH", tx.From.String(), s.Balances[tx.From], tx.Value)
+	if tx.Cost() > s.Balances[tx.From] {
+		return fmt.Errorf("wrong TX. Sender %s balance is %d MBH. Tx cost is %d MBH", tx.From.String(), s.Balances[tx.From], tx.Cost())
 	}
-
-	s.Balances[tx.From] -= tx.Value
-	s.Balances[tx.To] += tx.Value
-	s.Account2Nonce[tx.From] = tx.Nonce
 
 	return nil
 }

@@ -31,7 +31,7 @@ func runCmd() *cobra.Command {
 				false,
 			)
 
-			n := node.New(getDataDirFromCmd(cmd), ip, port, database.NewAccount(miner), bootStrap)
+			n := node.New(getDataDirFromCmd(cmd), ip, port, database.NewAccount(miner), bootStrap, node.DefaultDifficulty)
 			err := n.Run(context.Background())
 			if err != nil {
 				fmt.Println(err)

@@ -63,9 +63,18 @@ func (b Block) Hash() (Hash, error) {
 	return sha256.Sum256(blockJson), nil
 }
 
-func IsBlockHashValid(hash Hash) bool {
-	return fmt.Sprintf("%x", hash[0]) == "0" &&
-		fmt.Sprintf("%x", hash[1]) == "0" &&
-		fmt.Sprintf("%x", hash[2]) == "0" &&
-		fmt.Sprintf("%x", hash[3]) != "0"
+func IsBlockHashValid(hash Hash, dificulty uint) bool {
+	zeroCount := uint(0)
+
+	for i := uint(0); i < dificulty; i++ {
+		if fmt.Sprintf("%x", hash[i]) == "0" {
+			zeroCount++
+		}
+	}
+
+	if fmt.Sprintf("%x", hash[dificulty]) == "0" {
+		return false
+	}
+
+	return zeroCount == dificulty
 }
